@@ -33,12 +33,16 @@ class VideoPlayer {
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
             // Prevent default behavior for our shortcuts
-            const shortcuts = [' ', 'k', 'ArrowLeft', 'ArrowRight', 'j', 'l', 'ArrowUp', 'ArrowDown', 'z', 'x', 'a', 'o'];
+            const shortcuts = [' ', 'k', 'ArrowLeft', 'ArrowRight', 'j', 'l', 'p', 'n', 'z', 'x', 'a', 'o', '0'];
+            
             if (shortcuts.includes(e.key)) {
                 e.preventDefault();
             }
 
             switch(e.key) {
+                case '0':
+                    this.restartVideo();
+                    break;
                 case 'o':
                     this.selectFolder();
                     break;
@@ -58,10 +62,10 @@ class VideoPlayer {
                 case 'l':
                     this.forward(8);
                     break;
-                case 'ArrowUp':
+                case 'p':
                     this.previousVideo();
                     break;
-                case 'ArrowDown':
+                case 'n':
                     this.nextVideo();
                     break;
                 case 'z':
@@ -95,7 +99,7 @@ class VideoPlayer {
             }
             
             if (this.videoFiles.length > 0) {
-                this.videoFiles.sort((a, b) => a.name.localeCompare(b.name));
+                this.sortVideosByOpenedStatus();
                 this.currentVideoIndex = 0;
                 this.enableControls();
                 this.hideShortcuts();
@@ -122,6 +126,34 @@ class VideoPlayer {
         this.shortcutsEl.classList.add('hidden');
     }
 
+    sortVideosByOpenedStatus() {
+        // Sort videos: unopened first, then opened, both alphabetically within their groups
+        this.videoFiles.sort((a, b) => {
+            const aStats = this.getVideoStats(a.name);
+            const bStats = this.getVideoStats(b.name);
+            
+            // If one is opened and the other isn't, prioritize the unopened one
+            if (aStats.opened !== bStats.opened) {
+                return aStats.opened ? 1 : -1;
+            }
+            
+            // If both have the same opened status, sort alphabetically
+            return a.name.localeCompare(b.name);
+        });
+    }
+
+    restartVideo() {
+        // Only restart if we have videos loaded
+        if (this.videoFiles.length === 0) {
+            return;
+        }
+        
+        this.video.currentTime = 0;
+        if (this.video.paused) {
+            this.video.play();
+        }
+    }
+
     loadCurrentVideo() {
         if (this.videoFiles.length === 0) return;
         
@@ -129,26 +161,16 @@ class VideoPlayer {
         this.video.src = currentVideo.url;
         this.fileNameEl.textContent = currentVideo.name;
         
-        // Load saved stats
-        const stats = this.getVideoStats(currentVideo.name);
-        if (stats.currentTime > 0) {
-            this.video.currentTime = stats.currentTime;
-        }
-        
         // Mark as opened
-        this.saveVideoStats(currentVideo.name, { ...stats, opened: true });
+        const stats = this.getVideoStats(currentVideo.name);
+        this.saveVideoStats(currentVideo.name, { opened: true });
         
         this.video.load();
     }
 
     onVideoLoaded() {
-        const currentVideo = this.videoFiles[this.currentVideoIndex];
-        const stats = this.getVideoStats(currentVideo.name);
-        
-        if (stats.currentTime > 0 && stats.currentTime < this.video.duration) {
-            this.video.currentTime = stats.currentTime;
-        }
-        
+        // Always start from the beginning
+        this.video.currentTime = 0;
         this.updateStats();
         this.video.play();
     }
@@ -179,7 +201,6 @@ class VideoPlayer {
     previousVideo() {
         if (this.videoFiles.length === 0) return;
         
-        this.saveCurrentVideoTime();
         this.currentVideoIndex = (this.currentVideoIndex - 1 + this.videoFiles.length) % this.videoFiles.length;
         this.loadCurrentVideo();
     }
@@ -187,18 +208,8 @@ class VideoPlayer {
     nextVideo() {
         if (this.videoFiles.length === 0) return;
         
-        this.saveCurrentVideoTime();
         this.currentVideoIndex = (this.currentVideoIndex + 1) % this.videoFiles.length;
         this.loadCurrentVideo();
-    }
-
-    saveCurrentVideoTime() {
-        if (this.videoFiles.length === 0) return;
-        
-        const currentVideo = this.videoFiles[this.currentVideoIndex];
-        const stats = this.getVideoStats(currentVideo.name);
-        stats.currentTime = this.video.currentTime;
-        this.saveVideoStats(currentVideo.name, stats);
     }
 
     getVideoStats(fileName) {
@@ -210,7 +221,7 @@ class VideoPlayer {
                 console.error('Error parsing saved stats:', e);
             }
         }
-        return { opened: false, currentTime: 0 };
+        return { opened: false };
     }
 
     saveVideoStats(fileName, stats) {
@@ -232,11 +243,6 @@ class VideoPlayer {
             Speed: ${playbackRate}x | 
             ${stats.opened ? 'Previously watched' : 'New'}
         `;
-        
-        // Save current time periodically
-        if (this.video.currentTime > 0) {
-            this.saveVideoStats(currentVideo.name, { ...stats, currentTime: this.video.currentTime });
-        }
     }
 
     formatTime(seconds) {

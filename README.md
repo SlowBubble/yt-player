@@ -23,4 +23,8 @@
   - x: increase playback rate by 0.2
   - a: restore playback rate to 1
   
+# m1b
+- Sort the files by those that haven't been opened previously and play them first.
+- Add keyboard shortcuts
+ - 0 to adjust the seek from 0 of the video length
 
