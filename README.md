@@ -28,3 +28,8 @@
 - Add keyboard shortcuts
  - 0 to adjust the seek from 0 of the video length
 
+# m1c
+- Shortcut:
+  - 'Enter': open a text prompt for annotation
+    - store the text in the local storage json in a field 'annotations', which is a list of {'timeMs': number, 'text': string}
+- In the page before video folder is opened, display all annotations in a list 

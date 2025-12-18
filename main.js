@@ -9,6 +9,7 @@ class VideoPlayer {
         this.initializeElements();
         this.setupEventListeners();
         this.setupKeyboardShortcuts();
+        this.displayAllAnnotations();
     }
 
     initializeElements() {
@@ -17,6 +18,7 @@ class VideoPlayer {
         this.nextVideoBtn = document.getElementById('nextVideo');
         this.playPauseBtn = document.getElementById('playPause');
         this.shortcutsEl = document.querySelector('.shortcuts');
+        this.annotationsEl = document.getElementById('annotations');
     }
 
     setupEventListeners() {
@@ -33,7 +35,7 @@ class VideoPlayer {
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
             // Prevent default behavior for our shortcuts
-            const shortcuts = [' ', 'k', 'ArrowLeft', 'ArrowRight', 'j', 'l', 'p', 'n', 'z', 'x', 'a', 'o', '0'];
+            const shortcuts = [' ', 'k', 'ArrowLeft', 'ArrowRight', 'j', 'l', 'p', 'n', 'z', 'x', 'a', 'o', '0', 'Enter'];
             
             if (shortcuts.includes(e.key)) {
                 e.preventDefault();
@@ -42,6 +44,9 @@ class VideoPlayer {
             switch(e.key) {
                 case '0':
                     this.restartVideo();
+                    break;
+                case 'Enter':
+                    this.addAnnotation();
                     break;
                 case 'o':
                     this.selectFolder();
@@ -103,6 +108,7 @@ class VideoPlayer {
                 this.currentVideoIndex = 0;
                 this.enableControls();
                 this.hideShortcuts();
+                this.hideAnnotations();
                 this.loadCurrentVideo();
             } else {
                 alert('No .webm files found in the selected folder.');
@@ -124,6 +130,101 @@ class VideoPlayer {
 
     hideShortcuts() {
         this.shortcutsEl.classList.add('hidden');
+    }
+
+    hideAnnotations() {
+        this.annotationsEl.style.display = 'none';
+    }
+
+    addAnnotation() {
+        if (this.videoFiles.length === 0) return;
+        
+        // Pause the video and remember if it was playing
+        const wasPlaying = !this.video.paused;
+        if (wasPlaying) {
+            this.video.pause();
+        }
+        
+        const text = prompt('Enter annotation:');
+        
+        // Resume video if it was playing before
+        if (wasPlaying) {
+            this.video.play();
+        }
+        
+        if (text && text.trim()) {
+            const currentVideo = this.videoFiles[this.currentVideoIndex];
+            const timeMs = Math.floor(this.video.currentTime * 1000);
+            
+            const stats = this.getVideoStats(currentVideo.name);
+            if (!stats.annotations) {
+                stats.annotations = [];
+            }
+            
+            stats.annotations.push({
+                timeMs: timeMs,
+                text: text.trim()
+            });
+            
+            this.saveVideoStats(currentVideo.name, stats);
+        }
+    }
+
+    displayAllAnnotations() {
+        const allAnnotations = [];
+        
+        // Get all items from localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.endsWith('.webm')) {
+                try {
+                    const stats = JSON.parse(localStorage.getItem(key));
+                    if (stats.annotations && stats.annotations.length > 0) {
+                        stats.annotations.forEach(annotation => {
+                            allAnnotations.push({
+                                fileName: key,
+                                timeMs: annotation.timeMs,
+                                text: annotation.text,
+                                timeFormatted: this.formatTime(annotation.timeMs / 1000)
+                            });
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing stats for', key, e);
+                }
+            }
+        }
+        
+        // Sort by file name, then by time
+        allAnnotations.sort((a, b) => {
+            if (a.fileName !== b.fileName) {
+                return a.fileName.localeCompare(b.fileName);
+            }
+            return a.timeMs - b.timeMs;
+        });
+        
+        // Display annotations
+        if (allAnnotations.length > 0) {
+            let html = '<h3>All Annotations</h3>';
+            let currentFile = '';
+            
+            allAnnotations.forEach(annotation => {
+                if (annotation.fileName !== currentFile) {
+                    if (currentFile !== '') html += '</div>';
+                    html += `<div class="file-annotations"><h4>${annotation.fileName}</h4>`;
+                    currentFile = annotation.fileName;
+                }
+                html += `<div class="annotation-item">
+                    <span class="time">${annotation.timeFormatted}</span>
+                    <span class="text">${annotation.text}</span>
+                </div>`;
+            });
+            
+            if (currentFile !== '') html += '</div>';
+            this.annotationsEl.innerHTML = html;
+        } else {
+            this.annotationsEl.innerHTML = '<h3>No annotations yet</h3><p>Press Enter while watching videos to add annotations.</p>';
+        }
     }
 
     sortVideosByOpenedStatus() {

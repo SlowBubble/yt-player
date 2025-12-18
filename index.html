@@ -88,6 +88,49 @@
             pointer-events: none;
         }
 
+        .annotations-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #111;
+            border-radius: 10px;
+        }
+
+        .annotations-container h3 {
+            margin-top: 0;
+            color: #fff;
+        }
+
+        .file-annotations {
+            margin-bottom: 20px;
+        }
+
+        .file-annotations h4 {
+            color: #ccc;
+            margin: 10px 0 5px 0;
+            font-size: 16px;
+        }
+
+        .annotation-item {
+            display: flex;
+            margin: 5px 0;
+            padding: 8px;
+            background: #222;
+            border-radius: 5px;
+        }
+
+        .annotation-item .time {
+            color: #888;
+            font-family: monospace;
+            min-width: 80px;
+            margin-right: 15px;
+        }
+
+        .annotation-item .text {
+            color: #fff;
+            flex: 1;
+        }
+
         .shortcuts h4 {
             margin: 0 0 10px 0;
             font-size: 14px;
@@ -115,6 +158,8 @@
         <div class="stats" id="stats"></div>
     </div>
 
+    <div id="annotations" class="annotations-container"></div>
+
     <div class="shortcuts">
         <h4>Keyboard Shortcuts</h4>
         <div><strong>O:</strong> Select folder</div>
@@ -125,6 +170,7 @@
         <div><strong>L:</strong> Forward 8s</div>
         <div><strong>P:</strong> Previous video</div>
         <div><strong>N:</strong> Next video</div>
+        <div><strong>Enter:</strong> Add annotation</div>
         <div><strong>0:</strong> Restart from beginning</div>
         <div><strong>Z:</strong> Slower (0.2x)</div>
         <div><strong>X:</strong> Faster (0.2x)</div>
