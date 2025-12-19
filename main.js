@@ -14,18 +14,12 @@ class VideoPlayer {
 
     initializeElements() {
         this.selectFolderBtn = document.getElementById('selectFolder');
-        this.prevVideoBtn = document.getElementById('prevVideo');
-        this.nextVideoBtn = document.getElementById('nextVideo');
-        this.playPauseBtn = document.getElementById('playPause');
         this.shortcutsEl = document.querySelector('.shortcuts');
         this.annotationsEl = document.getElementById('annotations');
     }
 
     setupEventListeners() {
         this.selectFolderBtn.addEventListener('click', () => this.selectFolder());
-        this.prevVideoBtn.addEventListener('click', () => this.previousVideo());
-        this.nextVideoBtn.addEventListener('click', () => this.nextVideo());
-        this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
         
         this.video.addEventListener('ended', () => this.nextVideo());
         this.video.addEventListener('timeupdate', () => this.updateStats());
@@ -123,9 +117,6 @@ class VideoPlayer {
     }
 
     enableControls() {
-        this.prevVideoBtn.disabled = false;
-        this.nextVideoBtn.disabled = false;
-        this.playPauseBtn.disabled = false;
         this.video.style.display = 'block';
     }
 
@@ -279,10 +270,8 @@ class VideoPlayer {
     togglePlayPause() {
         if (this.video.paused) {
             this.video.play();
-            this.playPauseBtn.textContent = 'Pause';
         } else {
             this.video.pause();
-            this.playPauseBtn.textContent = 'Play';
         }
     }
 
@@ -333,17 +322,14 @@ class VideoPlayer {
         if (this.videoFiles.length === 0) return;
         
         const currentVideo = this.videoFiles[this.currentVideoIndex];
-        const stats = this.getVideoStats(currentVideo.name);
         const currentTime = this.formatTime(this.video.currentTime);
         const duration = this.formatTime(this.video.duration);
         const playbackRate = this.video.playbackRate.toFixed(1);
         
-        this.statsEl.innerHTML = `
-            Video ${this.currentVideoIndex + 1} of ${this.videoFiles.length} | 
-            ${currentTime} / ${duration} | 
-            Speed: ${playbackRate}x | 
-            ${stats.opened ? 'Previously watched' : 'New'}
-        `;
+        // Extract title from filename (part before first ".")
+        const title = currentVideo.name.split('.')[0];
+        
+        this.statsEl.innerHTML = `[${playbackRate}x] [${currentTime} / ${duration}] [${title}]`;
     }
 
     formatTime(seconds) {
