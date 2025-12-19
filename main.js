@@ -203,12 +203,25 @@ class VideoPlayer {
             allAnnotations.forEach(annotation => {
                 if (annotation.fileName !== currentFile) {
                     if (currentFile !== '') html += '</div>';
-                    html += `<div class="file-annotations"><h4>${annotation.fileName}</h4>`;
+                    const displayName = annotation.fileName.split('.')[0];
+                    html += `<div class="file-annotations"><h4>${displayName}</h4>`;
                     currentFile = annotation.fileName;
                 }
+                
+                // Check if filename contains YouTube video ID pattern
+                const youtubeMatch = annotation.fileName.match(/v=([a-zA-Z0-9_-]+)[.&]/);
+                let annotationContent = `<span class="text">${annotation.text}</span>`;
+                
+                if (youtubeMatch) {
+                    const videoId = youtubeMatch[1];
+                    const timestampSeconds = Math.floor(annotation.timeMs / 1000);
+                    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}&t=${timestampSeconds}s`;
+                    annotationContent = `<a href="${youtubeUrl}" target="_blank" class="text youtube-link">${annotation.text}</a>`;
+                }
+                
                 html += `<div class="annotation-item">
                     <span class="time">${annotation.timeFormatted}</span>
-                    <span class="text">${annotation.text}</span>
+                    ${annotationContent}
                 </div>`;
             });
             
