@@ -93,7 +93,8 @@ class VideoPlayer {
             this.videoFiles = [];
             
             for await (const entry of dirHandle.values()) {
-                if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.webm')) {
+                if (entry.kind === 'file' && 
+                    (entry.name.toLowerCase().endsWith('.webm') || entry.name.toLowerCase().endsWith('.mp4'))) {
                     const file = await entry.getFile();
                     this.videoFiles.push({
                         name: entry.name,
@@ -111,7 +112,7 @@ class VideoPlayer {
                 this.hideAnnotations();
                 this.loadCurrentVideo();
             } else {
-                alert('No .webm files found in the selected folder.');
+                alert('No .webm or .mp4 files found in the selected folder.');
             }
         } catch (err) {
             if (err.name !== 'AbortError') {
@@ -176,7 +177,7 @@ class VideoPlayer {
         // Get all items from localStorage
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && key.endsWith('.webm')) {
+            if (key && (key.endsWith('.webm') || key.endsWith('.mp4'))) {
                 try {
                     const stats = JSON.parse(localStorage.getItem(key));
                     if (stats.annotations && stats.annotations.length > 0) {
@@ -263,7 +264,6 @@ class VideoPlayer {
         this.fileNameEl.textContent = currentVideo.name;
         
         // Mark as opened
-        const stats = this.getVideoStats(currentVideo.name);
         this.saveVideoStats(currentVideo.name, { opened: true });
         
         this.video.load();

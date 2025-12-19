@@ -33,3 +33,6 @@
   - 'Enter': open a text prompt for annotation
     - store the text in the local storage json in a field 'annotations', which is a list of {'timeMs': number, 'text': string}
 - In the page before video folder is opened, display all annotations in a list 
+
+# m1d
+- In the page that shows the annotations, if the key (i.e. file name) is of the form "a|b", then extract "a" and treat it as a youtube url and use the timeMs to add the timestamp second in the form t=123s to the query param of the url, and then link it to the annotation displayed on the page.
